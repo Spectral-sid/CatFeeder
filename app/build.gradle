@@ -1,0 +1,134 @@
+plugins {
+    alias(libs.plugins.android.application)
+    alias(libs.plugins.kotlin.android)
+}
+
+//def versionPropsFile = file("version.properties")
+def getVersionCode() {
+    // Если файл не найден, создаем его с начальным значением
+    if (!versionPropsFile.canRead()) {
+        throw new GradleException("Could not read version.properties! You may need to create it manually with VERSION_CODE=1")
+    }
+
+    Properties versionProps = new Properties()
+    versionProps.load(new FileInputStream(versionPropsFile))
+    // Читаем текущее значение VERSION_CODE как целое число
+    def code = versionProps['VERSION_CODE'].toInteger()
+
+    // Получаем список задач, которые запускает Gradle
+    def runTasks = gradle.startParameter.taskNames
+
+            // *** КЛЮЧЕВОЙ МОМЕНТ ***
+            // Мы увеличиваем номер только при сборке release-версии или создании APK.
+            // Это предотвращает увеличение номера при каждой синхронизации Gradle или отладочной сборке.
+            // Список задач может отличаться. Вот наиболее частые случаи для вашего проекта:
+            if ('assembleRelease' in runTasks || 'assemble' in runTasks || 'bundleRelease' in runTasks) {
+                // Увеличиваем номер на 1
+                code++
+                // Сохраняем новое значение обратно в файл
+                versionProps['VERSION_CODE'] = code.toString()
+                versionProps.store(versionPropsFile.newWriter(), null)
+            }
+    // Возвращаем номер версии (увеличенный для сборки, или старый для обычного запуска)
+    return code
+}
+
+
+android {
+    namespace = "com.sid.catfeeder"
+    compileSdk {
+        version = release(36)
+    }
+    def versionPropsFile = file('version.properties')
+    def versionCodeValue = 1 // Значение по умолчанию
+
+    try {
+        if (versionPropsFile.canRead()) {
+            Properties versionProps = new Properties()
+            versionProps.load(new FileInputStream(versionPropsFile))
+            versionCodeValue = versionProps['VERSION_CODE'].toInteger()
+
+            def runTasks = gradle.startParameter.taskNames
+            if ('assembleRelease' in runTasks || 'assemble' in runTasks) {
+                versionCodeValue++
+                versionProps['VERSION_CODE'] = versionCodeValue.toString()
+                versionProps.store(versionPropsFile.newWriter(), null)
+            }
+        } else {
+            // Создаем файл, если его нет
+            def defaultProps = new Properties()
+            defaultProps['VERSION_CODE'] = '1'
+            defaultProps.store(versionPropsFile.newWriter(), null)
+            versionCodeValue = 0
+        }
+    } catch (Exception e) {
+        println "Ошибка чтения version.properties: ${e.message}"
+    }
+
+    defaultConfig {
+        applicationId = "com.sid.catfeeder"
+        minSdk = 21
+        targetSdk = 36
+        versionCode versionCodeValue
+        versionName = "0.${versionCodeValue}"
+
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        release {
+//            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+        }
+    }
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_1_8
+        targetCompatibility = JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+    buildFeatures {
+        viewBinding = true  // Добавьте эту строку для ViewBinding
+    }
+}
+
+dependencies {
+    implementation(libs.androidx.core.ktx)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    //implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+
+    // Retrofit для сетевых запросов
+    implementation("com.squareup.retrofit2:retrofit")
+    implementation("com.squareup.retrofit2:converter-gson:3.0.0")
+    //implementation("com.squareup.okhttp3:logging-interceptor:4.11.0")
+
+    // ZXing для сканирования штрихкодов
+        // Старая вер
+    implementation ("com.journeyapps:zxing-android-embedded:4.3.0")
+    // ML Kit Barcode Scanning
+    //implementation("com.google.mlkit:barcode-scanning:17.2.0")
+// CameraX
+    implementation("androidx.camera:camera-core:1.3.0")
+    implementation("androidx.camera:camera-camera2:1.3.0")
+    implementation("androidx.camera:camera-lifecycle:1.3.0")
+    implementation("androidx.camera:camera-view:1.3.0")
+
+    // Glide для загрузки изображений
+    implementation ("com.github.bumptech.glide:glide:4.15.1")
+    //annotationProcessor ("com.github.bumptech.glide:compiler:4.15.1)
+
+    // Coroutines
+    implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    // RecyclerView
+    implementation ("androidx.recyclerview:recyclerview:1.3.2")
+
+    testImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation(libs.androidx.espresso.core)
+}

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="96dp"
+    android:viewportWidth="96"
+    android:viewportHeight="96">
+
+    <!-- Голова кошки -->
+    <path
+        android:fillColor="#FF9800"
+        android:pathData="M48,12C30,12 16,26 16,44C16,62 30,76 48,76C66,76 80,62 80,44C80,26 66,12 48,12Z" />
+
+    <!-- Левое ухо -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M36,20L32,8L40,12L36,20Z" />
+
+    <!-- Правое ухо -->
+    <path
+        android:fillColor="#FF5722"
+        android:pathData="M60,20L64,8L56,12L60,20Z" />
+
+    <!-- Левый глаз -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M40,36C40,40 36,44 32,44C28,44 24,40 24,36C24,32 28,28 32,28C36,28 40,32 40,36Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M34,36C34,38 33,40 32,40C31,40 30,38 30,36C30,34 31,32 32,32C33,32 34,34 34,36Z" />
+
+    <!-- Правый глаз -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M72,36C72,40 68,44 64,44C60,44 56,40 56,36C56,32 60,28 64,28C68,28 72,32 72,36Z" />
+    <path
+        android:fillColor="#000000"
+        android:pathData="M66,36C66,38 65,40 64,40C63,40 62,38 62,36C62,34 63,32 64,32C65,32 66,34 66,36Z" />
+
+    <!-- Носик -->
+    <path
+        android:fillColor="#FF5252"
+        android:pathData="M48,48C44,48 40,52 40,56C40,60 44,64 48,64C52,64 56,60 56,56C56,52 52,48 48,48Z" />
+
+    <!-- Улыбка -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="M40,60 Q48,68 56,60" />
+</vector>

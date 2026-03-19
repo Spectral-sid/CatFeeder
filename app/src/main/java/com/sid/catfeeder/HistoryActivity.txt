@@ -1,0 +1,633 @@
+package com.example.catfeeder
+
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.*
+import androidx.appcompat.app.AppCompatActivity
+import androidx.cardview.widget.CardView
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.tabs.TabLayout
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
+
+// ВАЖНО: импортируйте правильный класс
+import com.example.catfeeder.FeedingHistoryItem
+import com.example.catfeeder.RetrofitClient
+import com.example.catfeeder.databinding.ActivityHistoryBinding
+
+class HistoryActivity : AppCompatActivity() {
+    
+    private lateinit var binding: ActivityHistoryBinding
+    
+    private lateinit var tabLayout: TabLayout
+    private lateinit var spinnerPets: Spinner
+    private lateinit var rvHistory: RecyclerView
+    private lateinit var tvEmptyState: TextView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var btnDateFilter: Button
+    private lateinit var tvDateRange: TextView
+    private lateinit var btnExport: Button
+    
+    private lateinit var adapter: FeedingHistoryAdapter
+    private var petsList = mutableListOf<Pet>()
+    private var selectedPetId: Int = -1
+    private var historyItems = mutableListOf<FeedingHistoryItem>() // Используем импортированный класс
+    
+    private var startDate: Long? = null
+    private var endDate: Long? = null
+    
+    companion object {
+        private const val TAG = "HistoryActivity"
+    }
+    
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        
+        // Используйте View Binding или setContentView
+        setContentView(R.layout.activity_history)
+        
+        // Настройка ActionBar
+        supportActionBar?.title = "История кормлений"
+        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        
+        initViews()
+        setupRecyclerView()
+        setupTabLayout()
+        setupSpinner()
+        setupClickListeners()
+        loadPets()
+        
+        // Устанавливаем даты по умолчанию (последние 7 дней)
+        setDefaultDateRange()
+    }
+    
+    private fun initViews() {
+        tabLayout = findViewById(R.id.tab_layout)
+        spinnerPets = findViewById(R.id.spinner_pets)
+        rvHistory = findViewById(R.id.rv_history)
+        tvEmptyState = findViewById(R.id.tv_empty_state)
+        progressBar = findViewById(R.id.progressBar)
+        btnDateFilter = findViewById(R.id.btn_date_filter)
+        tvDateRange = findViewById(R.id.tv_date_range)
+        btnExport = findViewById(R.id.btn_export)
+    }
+    
+    private fun setupRecyclerView() {
+        adapter = FeedingHistoryAdapter(emptyList())
+        rvHistory.layoutManager = LinearLayoutManager(this)
+        rvHistory.adapter = adapter
+        
+        // Добавляем слушатель для клика на элемент
+        adapter.setOnItemClickListener { item ->
+            showFeedingDetails(item)
+        }
+    }
+    
+    private fun setupTabLayout() {
+        tabLayout.addTab(tabLayout.newTab().setText("Все кормления"))
+        tabLayout.addTab(tabLayout.newTab().setText("По дням"))
+        tabLayout.addTab(tabLayout.newTab().setText("Статистика"))
+        
+        tabLayout.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
+            override fun onTabSelected(tab: TabLayout.Tab?) {
+                when (tab?.position) {
+                    0 -> loadFeedingHistory()
+                    1 -> loadGroupedByDay()
+                    2 -> loadStatistics()
+                }
+            }
+            
+            override fun onTabUnselected(tab: TabLayout.Tab?) {}
+            override fun onTabReselected(tab: TabLayout.Tab?) {}
+        })
+    }
+    
+    private fun setupSpinner() {
+        spinnerPets.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                if (position > 0) {
+                    selectedPetId = petsList[position - 1].id
+                    // Загружаем историю для выбранного питомца
+                    loadFeedingHistory()
+                } else {
+                    selectedPetId = -1
+                    // Сбрасываем список
+                    adapter.updateData(emptyList())
+                    tvEmptyState.visibility = View.VISIBLE
+                    tvEmptyState.text = "Выберите питомца для просмотра истории"
+                }
+            }
+            
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                selectedPetId = -1
+            }
+        }
+    }
+    
+    private fun setupClickListeners() {
+        btnDateFilter.setOnClickListener {
+            showDateRangePicker()
+        }
+        
+        btnExport.setOnClickListener {
+            exportData()
+        }
+    }
+    
+    private fun setDefaultDateRange() {
+        val calendar = Calendar.getInstance()
+        endDate = calendar.timeInMillis
+        
+        calendar.add(Calendar.DAY_OF_YEAR, -7)
+        startDate = calendar.timeInMillis
+        
+        updateDateRangeText()
+    }
+    
+    private fun showDateRangePicker() {
+        val datePicker = MaterialDatePicker.Builder.dateRangePicker()
+            .setTitleText("Выберите период")
+            .setSelection(
+                androidx.core.util.Pair(
+                    startDate ?: MaterialDatePicker.todayInUtcMilliseconds(),
+                    endDate ?: MaterialDatePicker.todayInUtcMilliseconds()
+                )
+            )
+            .build()
+        
+        datePicker.addOnPositiveButtonClickListener { selection ->
+            startDate = selection.first
+            endDate = selection.second
+            updateDateRangeText()
+            loadFeedingHistory()
+        }
+        
+        datePicker.show(supportFragmentManager, "DATE_RANGE_PICKER")
+    }
+    
+    private fun updateDateRangeText() {
+        val format = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+        val startText = if (startDate != null) format.format(Date(startDate!!)) else "???"
+        val endText = if (endDate != null) format.format(Date(endDate!!)) else "???"
+        tvDateRange.text = "$startText - $endText"
+    }
+    
+    private fun loadPets() {
+        showLoading(true)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitClient.instance.getPets()
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        val pets = response.body()?.data ?: emptyList()
+                        petsList.clear()
+                        petsList.addAll(pets)
+                        updatePetsSpinner(pets)
+                    } else {
+                        showError("Ошибка загрузки питомцев")
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    showError("Ошибка сети: ${e.message}")
+                }
+            }
+        }
+    }
+    
+    private fun updatePetsSpinner(pets: List<Pet>) {
+        val petNames = mutableListOf("Все питомцы")
+        petNames.addAll(pets.map { it.name })
+        
+        val adapter = ArrayAdapter(
+            this,
+            android.R.layout.simple_spinner_item,
+            petNames
+        )
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerPets.adapter = adapter
+    }
+    
+    private fun loadFeedingHistory() {
+        if (selectedPetId == -1) {
+            tvEmptyState.visibility = View.VISIBLE
+            tvEmptyState.text = "Выберите питомца для просмотра истории"
+            return
+        }
+        
+        showLoading(true)
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val startDateStr = startDate?.let { 
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
+                }
+                val endDateStr = endDate?.let { 
+                    SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(it))
+                }
+                
+                val response = RetrofitClient.instance.getFeedingHistory(
+                    petId = selectedPetId,
+                    startDate = startDateStr,
+                    endDate = endDateStr,
+                    limit = 100,
+                    offset = 0
+                )
+                
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    if (response.isSuccessful) {
+                        val apiResponse = response.body()
+                        if (apiResponse?.success == true) {
+                            val items = apiResponse.data ?: emptyList()
+                            historyItems.clear()
+                            historyItems.addAll(items) // Теперь типы совпадают
+                            
+                            if (items.isEmpty()) {
+                                tvEmptyState.visibility = View.VISIBLE
+                                tvEmptyState.text = "Нет записей за выбранный период"
+                                adapter.updateData(emptyList())
+                            } else {
+                                tvEmptyState.visibility = View.GONE
+                                adapter.updateData(items)
+                            }
+                        } else {
+                            showError(apiResponse?.error ?: "Ошибка загрузки истории")
+                        }
+                    } else {
+                        showError("Ошибка сервера: ${response.code()}")
+                        // Показываем тестовые данные для демонстрации
+                        loadMockData()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    showError("Ошибка сети: ${e.message}")
+                    // Показываем тестовые данные для демонстрации
+                    loadMockData()
+                }
+            }
+        }
+    }
+    
+    private fun loadGroupedByDay() {
+        if (historyItems.isEmpty()) {
+            Toast.makeText(this, "Нет данных для отображения", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Группируем записи по дням
+        val grouped = historyItems.groupBy { 
+            // Извлекаем только дату без времени
+            it.date.substring(0, 10)
+        }
+        
+        val groupedItems = grouped.map { (date, items) ->
+            FeedingHistoryItem(
+                id = date.hashCode(),
+                date = date,
+                time = null,
+                foodName = "${items.size} кормлений",
+                barcode = null,
+                manufacturer = null,
+                amount = items.sumOf { it.amount },
+                calories = null,
+                notes = "Всего: ${items.sumOf { it.amount }}г, Среднее: ${String.format("%.1f", items.map { it.amount }.average())}г",
+                petId = selectedPetId,
+                petName = null
+            )
+        }.sortedByDescending { it.date }
+        
+        adapter.updateData(groupedItems)
+    }
+    
+    private fun loadStatistics() {
+        if (historyItems.isEmpty()) {
+            Toast.makeText(this, "Нет данных для статистики", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        val totalFeedings = historyItems.size
+        val totalFood = historyItems.sumOf { it.amount }
+        val avgAmount = historyItems.map { it.amount }.average()
+        val maxAmount = historyItems.maxOfOrNull { it.amount } ?: 0.0
+        val minAmount = historyItems.minOfOrNull { it.amount } ?: 0.0
+        
+        // Получаем даты
+        val dates = historyItems.map { it.date }
+        val firstDate = if (dates.isNotEmpty()) dates.minOrNull() ?: "Н/Д" else "Н/Д"
+        val lastDate = if (dates.isNotEmpty()) dates.maxOrNull() ?: "Н/Д" else "Н/Д"
+        
+        val stats = listOf(
+            FeedingHistoryItem(
+                id = 1,
+                date = "Статистика за период",
+                time = null,
+                foodName = "Всего кормлений: $totalFeedings",
+                barcode = null,
+                manufacturer = null,
+                amount = totalFood,
+                calories = null,
+                notes = "Всего съедено: ${String.format("%.1f", totalFood)}г",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 2,
+                date = "Средние показатели",
+                time = null,
+                foodName = "Средняя порция: ${String.format("%.1f", avgAmount)}г",
+                barcode = null,
+                manufacturer = null,
+                amount = avgAmount,
+                calories = null,
+                notes = "Макс: ${String.format("%.1f", maxAmount)}г, Мин: ${String.format("%.1f", minAmount)}г",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 3,
+                date = "Период",
+                time = null,
+                foodName = "С $firstDate по $lastDate",
+                barcode = null,
+                manufacturer = null,
+                amount = 0.0,
+                calories = null,
+                notes = "Дней: ${dates.distinct().size}",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 4,
+                date = "Частота кормлений",
+                time = null,
+                foodName = "В среднем ${String.format("%.1f", totalFeedings / dates.distinct().size.toDouble())} раз/день",
+                barcode = null,
+                manufacturer = null,
+                amount = 0.0,
+                calories = null,
+                notes = "",
+                petId = selectedPetId,
+                petName = null
+            )
+        )
+        
+        adapter.updateData(stats)
+    }
+    
+    private fun loadMockData() {
+        // Тестовые данные для демонстрации
+        val mockData = listOf(
+            FeedingHistoryItem(
+                id = 1,
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date()),
+                time = "08:30:00",
+                foodName = "Purina One",
+                barcode = "5901234123456",
+                manufacturer = "Purina",
+                amount = 50.0,
+                calories = 190.0,
+                notes = "Утреннее кормление",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 2,
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(System.currentTimeMillis() - 12 * 60 * 60 * 1000)),
+                time = "20:15:00",
+                foodName = "Whiskas влажный",
+                barcode = "5901234123457",
+                manufacturer = "Whiskas",
+                amount = 85.0,
+                calories = 120.5,
+                notes = "Вечернее кормление",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 3,
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(System.currentTimeMillis() - 24 * 60 * 60 * 1000)),
+                time = "08:45:00",
+                foodName = "Royal Canin",
+                barcode = "5901234123458",
+                manufacturer = "Royal Canin",
+                amount = 45.0,
+                calories = 171.0,
+                notes = "Утреннее кормление",
+                petId = selectedPetId,
+                petName = null
+            ),
+            FeedingHistoryItem(
+                id = 4,
+                date = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date(System.currentTimeMillis() - 36 * 60 * 60 * 1000)),
+                time = "14:30:00",
+                foodName = "Purina One",
+                barcode = "5901234123456",
+                manufacturer = "Purina",
+                amount = 50.0,
+                calories = 190.0,
+                notes = "Дневное кормление",
+                petId = selectedPetId,
+                petName = null
+            )
+        )
+        
+        historyItems.clear()
+        historyItems.addAll(mockData)
+        adapter.updateData(mockData)
+        tvEmptyState.visibility = View.GONE
+    }
+    
+    private fun showFeedingDetails(item: FeedingHistoryItem) {
+        // Показываем детальную информацию о кормлении
+        val message = buildString {
+            append("📅 Дата: ${item.date}\n")
+            if (!item.time.isNullOrEmpty()) {
+                append("⏰ Время: ${item.time}\n")
+            }
+            append("🍖 Корм: ${item.foodName}\n")
+            if (!item.manufacturer.isNullOrEmpty()) {
+                append("🏭 Производитель: ${item.manufacturer}\n")
+            }
+            append("⚖️ Количество: ${item.amount} г\n")
+            if (item.calories != null) {
+                append("🔥 Калории: ${item.calories} ккал\n")
+            }
+            if (!item.notes.isNullOrEmpty()) {
+                append("📝 Заметки: ${item.notes}\n")
+            }
+        }
+        
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setTitle("Детали кормления")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .create()
+        
+        dialog.show()
+    }
+    
+    private fun exportData() {
+        if (historyItems.isEmpty()) {
+            Toast.makeText(this, "Нет данных для экспорта", Toast.LENGTH_SHORT).show()
+            return
+        }
+        
+        // Формируем CSV строку
+        val csv = StringBuilder()
+        csv.append("Дата,Время,Корм,Производитель,Количество (г),Калории,Заметки\n")
+        
+        historyItems.forEach { item ->
+            csv.append("${item.date},")
+            csv.append("${item.time ?: ""},")
+            csv.append("${item.foodName},")
+            csv.append("${item.manufacturer ?: ""},")
+            csv.append("${item.amount},")
+            csv.append("${item.calories ?: ""},")
+            csv.append("${item.notes ?: ""}\n")
+        }
+        
+        // Сохраняем файл
+        try {
+            val filename = "cat_feeder_history_${System.currentTimeMillis()}.csv"
+            val downloadsDir = android.os.Environment.getExternalStoragePublicDirectory(
+                android.os.Environment.DIRECTORY_DOWNLOADS
+            )
+            
+            if (downloadsDir != null) {
+                val outputFile = java.io.File(downloadsDir, filename)
+                outputFile.writeText(csv.toString())
+                
+                Toast.makeText(
+                    this,
+                    "Файл сохранен: ${outputFile.absolutePath}",
+                    Toast.LENGTH_LONG
+                ).show()
+                
+                // Отправляем широковещательное уведомление о новом файле
+                sendBroadcast(android.content.Intent(android.content.Intent.ACTION_MEDIA_SCANNER_SCAN_FILE)
+                    .setData(android.net.Uri.fromFile(outputFile)))
+            }
+        } catch (e: Exception) {
+            Toast.makeText(this, "Ошибка при сохранении файла: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+    
+    private fun showLoading(isLoading: Boolean) {
+        progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
+        rvHistory.visibility = if (isLoading) View.GONE else View.VISIBLE
+    }
+    
+    private fun showError(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+        tvEmptyState.visibility = View.VISIBLE
+        tvEmptyState.text = "Ошибка загрузки данных\nПроверьте подключение к серверу"
+    }
+    
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.menu_history, menu)
+        return true
+    }
+    
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            android.R.id.home -> {
+                finish()
+                true
+            }
+            R.id.action_refresh -> {
+                loadFeedingHistory()
+                true
+            }
+            R.id.action_filter_clear -> {
+                setDefaultDateRange()
+                loadFeedingHistory()
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+}
+
+// Адаптер для RecyclerView
+class FeedingHistoryAdapter(private var items: List<FeedingHistoryItem>) : 
+    RecyclerView.Adapter<FeedingHistoryAdapter.ViewHolder>() {
+    
+    private var onItemClickListener: ((FeedingHistoryItem) -> Unit)? = null
+    
+    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val tvDate: TextView = itemView.findViewById(R.id.tv_date)
+        val tvFoodName: TextView = itemView.findViewById(R.id.tv_food_name)
+        val tvAmount: TextView = itemView.findViewById(R.id.tv_amount)
+        val tvNotes: TextView = itemView.findViewById(R.id.tv_notes)
+        val cardView: CardView = itemView.findViewById(R.id.card_view)
+    }
+    
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_feeding_history_card, parent, false)
+        return ViewHolder(view)
+    }
+    
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = items[position]
+        
+        // Форматируем дату для отображения
+        val displayDate = try {
+            val sdf = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+            val date = sdf.parse(item.date)
+            val outputFormat = SimpleDateFormat("dd.MM.yyyy", Locale.getDefault())
+            outputFormat.format(date ?: Date())
+        } catch (e: Exception) {
+            item.date
+        }
+        
+        holder.tvDate.text = displayDate
+        holder.tvFoodName.text = item.foodName
+        holder.tvAmount.text = "${String.format("%.1f", item.amount)} г"
+        
+        if (item.notes.isNullOrEmpty()) {
+            holder.tvNotes.visibility = View.GONE
+        } else {
+            holder.tvNotes.visibility = View.VISIBLE
+            holder.tvNotes.text = item.notes
+        }
+        
+        // Устанавливаем цвет в зависимости от количества
+        val context = holder.itemView.context
+        val color = when {
+            item.amount > 80 -> context.getColor(android.R.color.holo_red_dark)
+            item.amount > 50 -> context.getColor(android.R.color.holo_orange_dark)
+            else -> context.getColor(android.R.color.holo_green_dark)
+        }
+        holder.tvAmount.setTextColor(color)
+        
+        holder.cardView.setOnClickListener {
+            onItemClickListener?.invoke(item)
+        }
+    }
+    
+    override fun getItemCount() = items.size
+    
+    fun updateData(newItems: List<FeedingHistoryItem>) {
+        items = newItems
+        notifyDataSetChanged()
+    }
+    
+    fun setOnItemClickListener(listener: (FeedingHistoryItem) -> Unit) {
+        onItemClickListener = listener
+    }
+}

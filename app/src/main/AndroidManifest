@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.sid.catfeeder">
+
+    <!-- Разрешения -->
+
+    <!-- Доступ в интернет -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- Проверка состояния сети -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- Доступ к камере для сканирования штрихкодов -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!-- Вибрация для уведомлений при сканировании -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!-- Разрешение на запись (если будет сохранение фото) -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="28" />
+
+    <!-- Разрешение на чтение (если будет загрузка фото) -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+
+    <!-- Для Android 13+ -->
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+
+    <!-- Функции устройства -->
+
+    <!-- Требуется камера -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="true" />
+
+    <!-- Автофокус (рекомендуется для сканирования штрихкодов) -->
+    <uses-feature
+        android:name="android.hardware.camera.autofocus"
+        android:required="false" />
+
+    <!-- Вспышка (опционально) -->
+    <uses-feature
+        android:name="android.hardware.camera.flash"
+        android:required="false" />
+
+    <!-- Поддержка штрихкодов -->
+    <uses-feature
+        android:name="android.hardware.camera.any"
+        android:required="true" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.CatFeeder"
+        android:usesCleartextTraffic="true"
+    tools:targetApi="31">
+
+    <!-- Главная активность -->
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:screenOrientation="portrait"
+        android:configChanges="orientation|screenSize|keyboardHidden"
+        android:windowSoftInputMode="stateVisible|adjustResize">
+        <intent-filter>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent-filter>
+
+        <!-- Обработка сканирования штрихкодов -->
+        <intent-filter>
+            <action android:name="android.intent.action.VIEW" />
+            <category android:name="android.intent.category.DEFAULT" />
+            <category android:name="android.intent.category.BROWSABLE" />
+            <data android:scheme="http" />
+            <data android:scheme="https" />
+            <data android:host="catfeeder" />
+        </intent-filter>
+    </activity>
+
+    <!-- Активность для сканирования штрихкодов (ZXing) -->
+    <activity
+        android:name="com.journeyapps.barcodescanner.CaptureActivity"
+        android:screenOrientation="portrait"
+        android:exported="false"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        tools:replace="screenOrientation" />
+
+    <!-- Альтернативная активность сканера -->
+    <activity
+        android:name="com.journeyapps.barcodescanner.DecoratedBarcodeView"
+        android:screenOrientation="portrait"
+        android:exported="false"
+        tools:replace="screenOrientation" />
+
+            <!-- Активность для настроек (если будет) -->
+    <activity
+        android:name=".SettingsActivity"
+        android:exported="false"
+        android:label="Настройки"
+        android:parentActivityName=".MainActivity">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value=".MainActivity" />
+    </activity>
+
+    <!-- Активность для просмотра истории (если будет отдельная) -->
+    <activity
+        android:name=".HistoryActivity"
+        android:exported="false"
+        android:label="История кормлений"
+        android:parentActivityName=".MainActivity">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value=".MainActivity" />
+    </activity>
+
+    <!-- Активность для добавления питомца (если будет) -->
+    <activity
+        android:name=".AddPetActivity"
+        android:exported="false"
+        android:label="Добавить питомца"
+        android:parentActivityName=".MainActivity">
+        <meta-data
+            android:name="android.support.PARENT_ACTIVITY"
+            android:value=".MainActivity" />
+    </activity>
+
+    <!-- Сервис для уведомлений (если будут напоминания) -->
+    <service
+        android:name=".NotificationService"
+        android:exported="false"
+        android:enabled="true" />
+
+    <!-- Ресивер для событий (если нужно) -->
+    <receiver
+        android:name=".BootReceiver"
+        android:enabled="true"
+        android:exported="false">
+        <intent-filter>
+            <action android:name="android.intent.action.BOOT_COMPLETED" />
+            <action android:name="android.intent.action.QUICKBOOT_POWERON" />
+            <category android:name="android.intent.category.DEFAULT" />
+        </intent-filter>
+    </receiver>
+        -->
+    ]]><!-- Провайдер для работы с файлами (если будет обмен данными) -->
+    <provider
+        android:name="androidx.core.content.FileProvider"
+        android:authorities="${applicationId}.fileprovider"
+        android:exported="false"
+        android:grantUriPermissions="true">
+        <meta-data
+            android:name="android.support.FILE_PROVIDER_PATHS"
+            android:resource="@xml/file_paths" />
+    </provider>
+
+    <!-- Мета-данные для темы -->
+    <meta-data
+        android:name="android.max_aspect"
+        android:value="2.1" />
+
+    <!-- Поддержка больших экранов -->
+    <meta-data
+        android:name="android.supports_size_changes"
+        android:value="true" />
+
+    <!-- Для работы с камерой (ZXing) -->
+    <meta-data
+        android:name="com.google.android.gms.vision.DEPENDENCIES"
+        android:value="barcode" />
+
+    <!-- Разрешение на запись логов в Android 6.0+ -->
+    <uses-library
+        android:name="org.apache.http.legacy"
+        android:required="false" />
+
+</application>
+
+    </manifest>

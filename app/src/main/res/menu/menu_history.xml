@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <!-- Кнопка обновления -->
+    <item
+        android:id="@+id/action_refresh"
+        android:icon="@drawable/ic_refresh"
+        android:title="Обновить"
+        app:showAsAction="ifRoom" />
+
+    <!-- Кнопка сброса фильтров -->
+    <item
+        android:id="@+id/action_filter_clear"
+        android:icon="@drawable/ic_clear"
+        android:title="Сбросить фильтры"
+        app:showAsAction="never" />
+
+    <!-- Разделитель -->
+    <item
+        android:id="@+id/action_settings"
+        android:title="Настройки"
+        app:showAsAction="never" />
+
+</menu>

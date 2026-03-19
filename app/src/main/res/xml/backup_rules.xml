@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<full-backup-data>
+    <!-- Включаем в резервное копирование -->
+    <include
+        domain="sharedpref"
+        path="."/>
+    <include
+        domain="database"
+        path="."/>
+    <include
+        domain="file"
+        path="."/>
+    <include
+        domain="external"
+        path="."/>
+
+    <!-- Исключаем -->
+    <exclude
+        domain="sharedpref"
+        path="device_id.xml"/>
+</full-backup-data>

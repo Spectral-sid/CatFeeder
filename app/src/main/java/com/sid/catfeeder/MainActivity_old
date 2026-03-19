@@ -1,0 +1,249 @@
+package com.sid.catfeeder
+//package com.example.catfeeder
+
+import android.app.AlertDialog
+import android.content.Intent
+import android.os.Bundle
+import android.widget.Button
+import android.widget.ProgressBar
+import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.google.zxing.integration.android.IntentIntegrator
+import com.sid.catfeeder.adapters.FeedingHistoryAdapter
+import com.sid.catfeeder.adapters.PetsAdapter
+import com.sid.catfeeder.models.FeedingHistory
+import com.sid.catfeeder.models.FeedingLogRequest
+import com.sid.catfeeder.models.Food
+import com.sid.catfeeder.models.Pet
+import com.sid.catfeeder.network.RetrofitClient
+import com.sid.catfeeder.network.CatFeederApiService
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.text.SimpleDateFormat
+import java.util.*
+
+class MainActivity : AppCompatActivity() {
+
+    // UI элементы
+    private lateinit var petsRecyclerView: RecyclerView
+    private lateinit var historyRecyclerView: RecyclerView
+    private lateinit var feedAllButton: Button
+    private lateinit var progressBar: ProgressBar
+
+    // Адаптеры
+    private lateinit var petsAdapter: PetsAdapter
+    private lateinit var historyAdapter: FeedingHistoryAdapter
+
+    // Данные
+    private val petsList = mutableListOf<Pet>()
+    private val historyList = mutableListOf<FeedingHistory>()
+
+    // Переменная для хранения текущего отсканированного корма
+    private var scannedFood: Food? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        initViews()
+        setupAdapters()
+        loadData()
+    }
+
+    private fun initViews() {
+        petsRecyclerView = findViewById(R.id.rv_pets)
+        historyRecyclerView = findViewById(R.id.rv_history)
+        feedAllButton = findViewById(R.id.btn_feed_all)
+        progressBar = findViewById(R.id.progress_bar)
+
+        feedAllButton.setOnClickListener {
+            startBarcodeScan()
+        }
+    }
+
+    private fun setupAdapters() {
+        // Адаптер для питомцев (горизонтальный)
+        petsAdapter = PetsAdapter(petsList)
+        petsRecyclerView.layoutManager = LinearLayoutManager(
+            this,
+            LinearLayoutManager.HORIZONTAL,
+            false
+        )
+        petsRecyclerView.adapter = petsAdapter
+
+        // Адаптер для истории (вертикальный)
+        historyAdapter = FeedingHistoryAdapter(historyList)
+        historyRecyclerView.layoutManager = LinearLayoutManager(this)
+        historyRecyclerView.adapter = historyAdapter
+    }
+
+    private fun loadData() {
+        showProgress(true)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Загружаем питомцев и историю параллельно
+                val petsDeferred = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getPets()
+                }
+                val historyDeferred = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getRecentFeedings(7)
+                }
+
+                // Обновляем UI
+                petsList.clear()
+                petsList.addAll(petsDeferred.filter { it.isActive })
+                petsAdapter.notifyDataSetChanged()
+
+                historyList.clear()
+                historyList.addAll(historyDeferred)
+                historyAdapter.notifyDataSetChanged()
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showError("Ошибка загрузки данных: ${e.message}")
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun startBarcodeScan() {
+        val integrator = IntentIntegrator(this)
+        integrator.setPrompt("Наведите на штрихкод корма")
+        integrator.setBeepEnabled(true)
+        integrator.setOrientationLocked(false)
+        integrator.initiateScan()
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        val result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data)
+        if (result != null && result.contents != null) {
+            val barcode = result.contents
+            processScannedBarcode(barcode)
+        }
+    }
+
+    private fun processScannedBarcode(barcode: String) {
+        showProgress(true)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                // Ищем корм по штрихкоду
+                val food = withContext(Dispatchers.IO) {
+                    RetrofitClient.apiService.getFoodByBarcode(barcode)
+                }
+
+                scannedFood = food
+
+                // Проверяем вес упаковки
+                if (food.weightGrams == null || food.weightGrams <= 0) {
+                    showError("У этого корма не указан вес упаковки")
+                    return@launch
+                }
+
+                // Показываем диалог подтверждения
+                showFeedingConfirmationDialog(food)
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showError("Корм не найден. Сначала добавьте его в базу.")
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun showFeedingConfirmationDialog(food: Food) {
+        val totalWeight = food.weightGrams ?: 0.0
+        val portionPerPet = if (petsList.isNotEmpty()) {
+            totalWeight / petsList.size
+        } else 0.0
+
+        val message = """
+            Корм: ${food.name}
+            Вес упаковки: ${totalWeight}г
+            Количество кошек: ${petsList.size}
+            Порция на кошку: ${String.format("%.1f", portionPerPet)}г
+
+            Записать кормление?
+        """.trimIndent()
+
+        AlertDialog.Builder(this)
+            .setTitle("Подтверждение кормления")
+            .setMessage(message)
+            .setPositiveButton("Да") { _, _ ->
+                feedAllCats(food)
+            }
+            .setNegativeButton("Отмена", null)
+            .show()
+    }
+
+    private fun feedAllCats(food: Food) {
+        if (petsList.isEmpty()) {
+            showError("Нет активных питомцев")
+            return
+        }
+
+        showProgress(true)
+        CoroutineScope(Dispatchers.Main).launch {
+            try {
+                val totalWeight = food.weightGrams ?: 0.0
+                val portionPerPet = totalWeight / petsList.size
+
+                val currentDate = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+                val currentTime = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+
+                // Отправляем запросы кормления для каждого питомца
+                for (pet in petsList) {
+                    val feedingRequest = FeedingLogRequest(
+                        petId = pet.id,
+                        foodId = food.id,
+                        amountGrams = portionPerPet,
+                        feedingDate = currentDate,
+                        feedingTime = currentTime
+                    )
+
+                    withContext(Dispatchers.IO) {
+                        RetrofitClient.apiService.addFeeding(feedingRequest)
+                    }
+                }
+
+                // Обновляем историю
+                loadData()
+
+                showSuccess("Все кошки покормлены! Порция: ${String.format("%.1f", portionPerPet)}г")
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+                showError("Ошибка при записи кормления: ${e.message}")
+            } finally {
+                showProgress(false)
+            }
+        }
+    }
+
+    private fun showProgress(show: Boolean) {
+        progressBar.visibility = if (show) android.view.View.VISIBLE else android.view.View.GONE
+        feedAllButton.isEnabled = !show
+    }
+
+    private fun showError(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Ошибка")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+
+    private fun showSuccess(message: String) {
+        AlertDialog.Builder(this)
+            .setTitle("Успешно!")
+            .setMessage(message)
+            .setPositiveButton("OK", null)
+            .show()
+    }
+}

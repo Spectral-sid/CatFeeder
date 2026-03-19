@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <!-- Внешнее хранилище -->
+    <external-path
+        name="external_files"
+        path="." />
+
+    <!-- Внутреннее хранилище приложения -->
+    <files-path
+        name="internal_files"
+        path="." />
+
+    <!-- Кэш -->
+    <cache-path
+        name="cache"
+        path="." />
+
+    <!-- Внешние файлы -->
+    <external-files-path
+        name="external_app_files"
+        path="." />
+
+    <!-- Внешний кэш -->
+    <external-cache-path
+        name="external_app_cache"
+        path="." />
+
+    <!-- Для фото камеры -->
+    <external-files-path
+        name="camera_photos"
+        path="Pictures/" />
+</paths>

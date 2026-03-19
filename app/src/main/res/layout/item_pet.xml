@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="120dp"
+    android:layout_height="140dp"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:background="@drawable/bg_pet_item"
+    android:layout_marginEnd="12dp"
+    android:padding="8dp">
+
+    <ImageView
+        android:id="@+id/iv_pet_image"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_marginBottom="8dp"
+        android:src="@drawable/ic_cat_default"/>
+
+    <TextView
+        android:id="@+id/tv_pet_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Кошка"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:gravity="center"/>
+
+    <TextView
+        android:id="@+id/tv_pet_weight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="4.5 кг"
+        android:textSize="12sp"
+        android:textColor="#666666"
+        android:gravity="center"/>
+
+</LinearLayout>

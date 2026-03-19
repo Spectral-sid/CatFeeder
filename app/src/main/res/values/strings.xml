@@ -1,0 +1,34 @@
+<resources>
+    <string name="app_name">CatFeeder - Учет кормления</string>
+    <string name="title_activity_main">Учет кормления кошек</string>
+
+    <!-- Кнопки -->
+    <string name="scan_barcode">Сканировать штрихкод</string>
+    <string name="save_feeding">Сохранить кормление</string>
+    <string name="select_pet">Выберите питомца</string>
+
+    <!-- Подсказки -->
+    <string name="barcode_hint">Штрихкод не отсканирован</string>
+    <string name="food_name_hint">Название корма</string>
+    <string name="amount_hint">Количество (г)</string>
+
+    <!-- Сообщения -->
+    <string name="server_connected">Сервер подключен</string>
+    <string name="server_disconnected">Сервер не отвечает</string>
+    <string name="scan_success">Штрихкод отсканирован</string>
+    <string name="feeding_saved">Кормление сохранено</string>
+    <string name="error_no_pet">Выберите питомца</string>
+    <string name="error_no_barcode">Отсканируйте штрихкод</string>
+    <string name="error_no_food_name">Введите название корма</string>
+    <string name="error_no_amount">Введите количество корма</string>
+
+    <!-- Меню -->
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_history">История</string>
+    <string name="menu_add_pet">Добавить питомца</string>
+
+    <!-- Статусы -->
+    <string name="loading">Загрузка...</string>
+    <string name="scanning">Сканирование...</string>
+    <string name="saving">Сохранение...</string>
+</resources>

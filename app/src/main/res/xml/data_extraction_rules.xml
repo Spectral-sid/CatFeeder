@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<data-extraction-rules>
+    <cloud-backup>
+        <!-- Включаем в облачное резервное копирование -->
+        <include domain="sharedpref" path="."/>
+        <include domain="database" path="."/>
+        <include domain="file" path="."/>
+        <include domain="external" path="CatFeeder/"/>
+    </cloud-backup>
+
+    <device-transfer>
+        <!-- Включаем в локальное копирование -->
+        <include domain="sharedpref" path="."/>
+        <include domain="database" path="."/>
+        <include domain="file" path="."/>
+        <include domain="external" path="CatFeeder/"/>
+    </device-transfer>
+</data-extraction-rules>
