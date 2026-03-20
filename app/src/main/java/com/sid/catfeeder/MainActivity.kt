@@ -367,7 +367,11 @@ class MainActivity : AppCompatActivity() {
             adapter.updateData(emptyList())
             return
         }
-
+        if (allFeedings.isEmpty()) {
+            tvEmptyState.visibility = View.VISIBLE
+            tvEmptyState.text = "Загрузка истории..."
+            return
+        }
         val filteredHistory = allFeedings
             .filter { it.petId in selectedPetIds }
             .sortedByDescending { "${it.date} ${it.time ?: ""}" }

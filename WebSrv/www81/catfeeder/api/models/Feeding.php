@@ -118,9 +118,12 @@ class Feeding {
     
     // Получить историю кормлений для питомца
     public function getHistory($petId, $startDate = null, $endDate = null, $limit = 100, $offset = 0) {
-        $query = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer
+        $query = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer,
+					ft.name as type_name, ff.name as flavor_name
                   FROM " . $this->table . " fh
                   JOIN foods f ON fh.food_id = f.id
+				  JOIN food_types ft ON f.food_type_id = ft.id
+                  LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
                   JOIN manufacturers m ON f.manufacturer_id = m.id
                   WHERE fh.pet_id = :pet_id";
         
@@ -173,10 +176,13 @@ class Feeding {
     
     // Получить конкретное кормление по ID
     public function getById($id) {
-        $query = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name
+        $query = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name,
+					ft.name as type_name, ff.name as flavor_name
                   FROM " . $this->table . " fh
                   JOIN foods f ON fh.food_id = f.id
                   JOIN manufacturers m ON f.manufacturer_id = m.id
+				  JOIN food_types ft ON f.food_type_id = ft.id
+                  LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
                   JOIN pets p ON fh.pet_id = p.id
                   WHERE fh.id = :id
                   LIMIT 1";

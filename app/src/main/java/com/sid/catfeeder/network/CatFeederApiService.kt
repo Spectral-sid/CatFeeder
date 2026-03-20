@@ -189,6 +189,8 @@ data class FeedingHistoryItem(
     val foodName: String,
     val barcode: String? = null,
     val manufacturer: String? = null,
+    val type: String? = null,
+    val flavor: String? = null,
     val amount: Double,
     val calories: Double? = null,
     val wasFinished: Int? = 100,

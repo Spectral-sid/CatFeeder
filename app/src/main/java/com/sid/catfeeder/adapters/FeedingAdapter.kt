@@ -42,7 +42,7 @@ class FeedingAdapter(
         }
 
         holder.tvDate.text = dateTimeStr
-        holder.tvFoodName.text = feeding.foodName
+        holder.tvFoodName.text = "${feeding.manufacturer}: ${feeding.foodName} ${feeding.flavor ?: ""} "
         holder.tvAmount.text = "${String.format("%.1f", feeding.amount)} г"
 
         // Показываем имя питомца

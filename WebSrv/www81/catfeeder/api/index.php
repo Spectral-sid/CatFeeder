@@ -380,6 +380,8 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'] ?? null,
+                    'type' => $item['type_name'],
+                    'flavor' => $item['flavor_name'],
                     'amount' => (float)$item['amount_grams'],
 					'wasFinished' => $item['was_finished'],
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
@@ -402,9 +404,12 @@ elseif ($endpoint === 'feeding') {
             $limit = $_GET['limit'] ?? 100;
             $offset = $_GET['offset'] ?? 0;
             
-            $sql = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name 
+            $sql = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name,
+					ft.name as type_name, ff.name as flavor_name
                     FROM feeding_history fh
                     JOIN foods f ON fh.food_id = f.id
+					JOIN food_types ft ON f.food_type_id = ft.id
+                  LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
                     JOIN manufacturers m ON f.manufacturer_id = m.id
                     JOIN pets p ON fh.pet_id = p.id
                     WHERE 1=1";
@@ -445,6 +450,8 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'],
+					'type' => $item['type_name'],
+                    'flavor' => $item['flavor_name'],
                     'amount' => (float)$item['amount_grams'],
 					'wasFinished' => $item['was_finished'],
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
@@ -484,6 +491,8 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'],
+					'type' => $item['type_name'],
+                    'flavor' => $item['flavor_name'],
                     'amount' => (float)$item['amount_grams'],
 					'wasFinished' => $item['was_finished'],
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
