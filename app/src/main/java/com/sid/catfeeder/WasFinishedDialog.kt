@@ -5,6 +5,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.widget.RadioButton
 import android.widget.RadioGroup
+import android.widget.TextView
 import com.sid.catfeeder.network.FeedingHistoryItem
 
 class WasFinishedDialog(
