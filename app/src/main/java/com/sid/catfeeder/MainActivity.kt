@@ -99,7 +99,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView() {
-        adapter = FeedingAdapter(emptyList())
+        adapter = FeedingAdapter(emptyList()) { feedingItem ->
+            showWasFinishedDialog(feedingItem)
+        }
         rvHistory.layoutManager = LinearLayoutManager(this)
         rvHistory.adapter = adapter
     }
@@ -271,6 +273,59 @@ class MainActivity : AppCompatActivity() {
         calculatePortion()
     }
 
+    private fun showWasFinishedDialog(feedingItem: FeedingHistoryItem) {
+        WasFinishedDialog(this, feedingItem) { wasFinished ->
+            updateWasFinished(feedingItem.id, wasFinished)
+        }.show()
+    }
+
+    private fun updateWasFinished(feedingId: Int, wasFinished: Int) {
+        showLoading(true)
+        lifecycleScope.launch {
+            try {
+                val response = RetrofitClient.instance.updateWasFinished(
+                    feedingId,
+                    WasFinishedRequest(wasFinished)
+                )
+
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    if (response.isSuccessful && response.body()?.success == true) {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Статус обновлен",
+                            Toast.LENGTH_SHORT
+                        ).show()
+
+                        // Обновляем элемент в локальном кеше
+                        val index = allFeedings.indexOfFirst { it.id == feedingId }
+                        if (index >= 0) {
+                            val updatedItem = allFeedings[index].copy(wasFinished = wasFinished)
+                            allFeedings[index] = updatedItem
+                        }
+
+                        // Обновляем отображение
+                        filterHistoryBySelectedPets()
+                    } else {
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Ошибка обновления",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    showLoading(false)
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Ошибка сети: ${e.message}",
+                        Toast.LENGTH_LONG
+                    ).show()
+                }
+            }
+        }
+    }
     private fun loadAllFeedingHistory() {
         if (petsList.isEmpty()) return
 

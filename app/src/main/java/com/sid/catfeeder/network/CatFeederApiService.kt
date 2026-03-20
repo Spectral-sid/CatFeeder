@@ -65,6 +65,12 @@ interface CatFeederApiService {
     @GET("feeding/{id}")
     suspend fun getFeedingById(@Path("id") feedingId: Int): Response<ApiResponse<FeedingHistoryItem>>
 
+    @PUT("feeding/{id}/was-finished")
+    suspend fun updateWasFinished(
+        @Path("id") id: Int,
+        @Body request: WasFinishedRequest
+    ): Response<ApiResponse<Unit>>
+
     // Статистика
     @GET("pets/{id}/stats")
     suspend fun getPetStats(
@@ -152,6 +158,7 @@ data class FeedingLog(
     val feedingDate: String? = null,
     val feedingTime: String? = null,
     val calories: Double? = null,
+    val wasFinished: Int? = 100,
     val notes: String? = null
 )
 
@@ -184,11 +191,14 @@ data class FeedingHistoryItem(
     val manufacturer: String? = null,
     val amount: Double,
     val calories: Double? = null,
+    val wasFinished: Int? = 100,
     val notes: String? = null,
     val petId: Int? = null,
     val petName: String? = null
 )
-
+data class WasFinishedRequest(
+    val wasFinished: Int
+)
 data class PetStats(
     val feedingCount: Int,
     val totalFood: Double,

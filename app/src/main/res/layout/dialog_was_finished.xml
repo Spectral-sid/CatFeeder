@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:id="@+id/tvInfo"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:textColor="@color/text_primary"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"/>
+
+    <RadioGroup
+        android:id="@+id/radioGroup"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <RadioButton
+            android:id="@+id/rbAll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✓ Всё съедено (100%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/success_green"
+            android:padding="8dp"/>
+
+        <RadioButton
+            android:id="@+id/rbMost"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚡ Большая часть (75%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/success_green"
+            android:padding="8dp"/>
+
+        <RadioButton
+            android:id="@+id/rbHalf"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="◔ Половина (50%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/warning_orange"
+            android:padding="8dp"/>
+
+        <RadioButton
+            android:id="@+id/rbThird"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="◷ Треть (33%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/warning_orange"
+            android:padding="8dp"/>
+
+        <RadioButton
+            android:id="@+id/rbLittle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="◐ Почти ничего (10%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/error_red"
+            android:padding="8dp"/>
+
+        <RadioButton
+            android:id="@+id/rbNone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✗ Не тронуто (0%)"
+            android:textSize="16sp"
+            android:buttonTint="@color/error_red"
+            android:padding="8dp"/>
+
+    </RadioGroup>
+
+</LinearLayout>
