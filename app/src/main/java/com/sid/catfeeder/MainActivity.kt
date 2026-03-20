@@ -363,7 +363,7 @@ class MainActivity : AppCompatActivity() {
     private fun filterHistoryBySelectedPets() {
         if (selectedPetIds.isEmpty()) {
             tvEmptyState.visibility = View.VISIBLE
-            tvEmptyState.text = "Выберите питомцев для просмотра истории"
+            tvEmptyState.text = "Выберите питомцев для просмотра истории!"
             adapter.updateData(emptyList())
             return
         }
