@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест API CatFeeder</title>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .endpoint { margin: 10px 0; padding: 10px; background: #f5f5f5; }
+        button { margin: 5px; padding: 8px 15px; }
+        pre { background: #eee; padding: 10px; overflow: auto; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Тестирование API CatFeeder</h1>
+    <div id="results"></div>
+    
+    <div class="endpoint">
+        <h3>1. Health Check</h3>
+        <button onclick="testEndpoint('/catfeeder/api/health')">Test /health</button>
+    </div>
+    
+    <div class="endpoint">
+        <h3>2. Корневой путь</h3>
+        <button onclick="testEndpoint('/catfeeder/api/')">Test /</button>
+    </div>
+    
+    <div class="endpoint">
+        <h3>3. Список питомцев</h3>
+        <button onclick="testEndpoint('/catfeeder/api/pets')">Test /pets</button>
+    </div>
+    
+    <div class="endpoint">
+        <h3>4. Поиск корма по штрихкоду</h3>
+        <button onclick="testEndpoint('/catfeeder/api/foods/barcode/5901234123456')">Test /foods/barcode</button>
+    </div>
+    
+    <div class="endpoint">
+        <h3>5. История кормлений</h3>
+        <button onclick="testEndpoint('/catfeeder/api/feeding/history/1')">Test /feeding/history/1</button>
+    </div>
+    
+    <div class="endpoint">
+        <h3>6. Тест POST запроса</h3>
+        <button onclick="testPost()">Test POST /feeding</button>
+    </div>
+    
+    <script>
+        async function testEndpoint(url) {
+            try {
+                const response = await fetch('http://192.168.1.13:81' + url);
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('results');
+                resultDiv.innerHTML = `
+                    <h2>Результат для ${url}:</h2>
+                    <p>Статус: <span class="${response.ok ? 'success' : 'error'}">${response.status}</span></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <h2>Ошибка для ${url}:</h2>
+                    <p class="error">${error.message}</p>
+                `;
+            }
+        }
+        
+        async function testPost() {
+            try {
+                const response = await fetch('http://192.168.1.13:81/catfeeder/api/feeding', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        petId: 1,
+                        amount: 50.5,
+                        barcode: '5901234123456',
+                        foodName: 'Test Food'
+                    })
+                });
+                
+                const data = await response.json();
+                
+                const resultDiv = document.getElementById('results');
+                resultDiv.innerHTML = `
+                    <h2>Результат POST /feeding:</h2>
+                    <p>Статус: <span class="${response.ok ? 'success' : 'error'}">${response.status}</span></p>
+                    <pre>${JSON.stringify(data, null, 2)}</pre>
+                `;
+            } catch (error) {
+                document.getElementById('results').innerHTML = `
+                    <h2>Ошибка POST запроса:</h2>
+                    <p class="error">${error.message}</p>
+                `;
+            }
+        }
+        
+        // Автотест всех эндпоинтов
+        async function runAllTests() {
+            const endpoints = [
+                '/catfeeder/api/health',
+                '/catfeeder/api/',
+                '/catfeeder/api/pets',
+                '/catfeeder/api/foods/barcode/5901234123456',
+                '/catfeeder/api/feeding/history/1'
+            ];
+            
+            let results = [];
+            
+            for (const endpoint of endpoints) {
+                try {
+                    const response = await fetch('http://192.168.1.13:81' + endpoint);
+                    results.push({
+                        endpoint,
+                        status: response.status,
+                        ok: response.ok
+                    });
+                } catch (error) {
+                    results.push({
+                        endpoint,
+                        error: error.message
+                    });
+                }
+            }
+            
+            console.log('Результаты тестов:', results);
+        }
+        
+        // Запуск автотеста при загрузке
+        window.onload = runAllTests;
+    </script>
+</body>
+</html>

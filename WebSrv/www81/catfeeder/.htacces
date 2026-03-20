@@ -1,0 +1,33 @@
+
+#RewriteEngine On
+#RewriteBase /catfeeder/
+#RewriteBase /
+
+# Перенаправление всех запросов на index.php
+#RewriteCond %{REQUEST_FILENAME} !-f
+#RewriteCond %{REQUEST_FILENAME} !-d
+# Если файл или папка существуют, отдаем их
+#RewriteCond %{REQUEST_FILENAME} -f [OR]
+#RewriteCond %{REQUEST_FILENAME} -d
+#RewriteRule ^ - [L]
+
+#RewriteRule ^(.*)$ api/index.php [QSA,L]
+
+Options -Indexes
+RewriteEngine On
+
+# Разрешаем доступ ко всем файлам
+Require all granted
+
+# Если файл или папка существуют, отдаем их
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Все остальное перенаправляем в api/index.php
+RewriteRule ^(.*)$ api/index.php [L,QSA]
+
+# Разрешить CORS
+Header set Access-Control-Allow-Origin "*"
+Header set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
+Header set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With"
