@@ -123,6 +123,8 @@
             android:exported="false"
             android:label="Добавление корма"
             android:theme="@style/Theme.CatFeeder.Light"
+            android:windowSoftInputMode="stateVisible|adjustResize"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".MainActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"

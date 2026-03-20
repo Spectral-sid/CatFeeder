@@ -108,6 +108,8 @@ class AddFoodActivity : AppCompatActivity() {
 
                 setupSpinners()
 
+                etWeight.setText("75")
+
             } catch (e: Exception) {
                 Toast.makeText(this@AddFoodActivity,
                     "Ошибка загрузки справочников: ${e.message}", Toast.LENGTH_LONG).show()

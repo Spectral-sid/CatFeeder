@@ -59,7 +59,7 @@ android {
             def defaultProps = new Properties()
             defaultProps['VERSION_CODE'] = '1'
             defaultProps.store(versionPropsFile.newWriter(), null)
-            versionCodeValue = 0
+            versionCodeValue = 1
         }
     } catch (Exception e) {
         println "Ошибка чтения version.properties: ${e.message}"
