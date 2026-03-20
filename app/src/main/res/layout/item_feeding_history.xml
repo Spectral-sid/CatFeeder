@@ -46,7 +46,8 @@
                 android:textStyle="bold"
                 android:paddingHorizontal="8dp"
                 android:paddingVertical="4dp"
-                android:background="@drawable/bg_status_badge"/>
+                android:background="@drawable/bg_status_badge"
+                android:visibility="gone"/>
         </LinearLayout>
 
         <LinearLayout
