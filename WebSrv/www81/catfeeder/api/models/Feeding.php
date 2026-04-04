@@ -74,7 +74,7 @@ class Feeding {
         }
         
         // Определяем was_finished (по умолчанию 100% - всё съедено)
-        $wasFinished = $data['was_finished'] ?? 100;
+        $wasFinished = $data['was_finished'] ?? 0;
         
         // Создаем запись о кормлении
         $query = "INSERT INTO " . $this->table . " 

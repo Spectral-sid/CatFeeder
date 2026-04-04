@@ -70,7 +70,7 @@ if ($path === '' || $path === 'health') {
     ]);
 }
 
-// ===== PIMTOMCY (PETS) =====
+// ===== ПИТОМЦЫ (PETS) =====
 elseif ($endpoint === 'pets') {
     
     require_once 'models/Pet.php';
@@ -261,8 +261,7 @@ elseif ($endpoint === 'foods') {
     // POST /foods - создание нового корма
     elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && $action === '') {
         try {
- error_log("Content: " . file_get_contents('php://input'));
-			$data = json_decode(file_get_contents('php://input'), true);
+            $data = json_decode(file_get_contents('php://input'), true);
             
             if (!isset($data['barcode']) || !isset($data['name'])) {
                 Response::sendError('Не указаны обязательные параметры: barcode, name');
@@ -336,7 +335,6 @@ elseif ($endpoint === 'feeding') {
                 Response::sendError('Не указан корм (foodId или barcode)');
             }
             
-            // Преобразуем camelCase в snake_case для БД
             $dbData = [
                 'pet_id' => $data['petId'],
                 'amount' => $data['amount'],
@@ -346,6 +344,7 @@ elseif ($endpoint === 'feeding') {
                 'feeding_date' => $data['feedingDate'] ?? date('Y-m-d'),
                 'feeding_time' => $data['feedingTime'] ?? date('H:i:s'),
                 'calories' => $data['calories'] ?? null,
+                'was_finished' => $data['wasFinished'] ?? 100,
                 'notes' => $data['notes'] ?? null
             ];
             
@@ -380,10 +379,10 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'] ?? null,
-                    'type' => $item['type_name'],
-                    'flavor' => $item['flavor_name'],
+                    'type' => $item['type_name'] ?? null,
+                    'flavor' => $item['flavor_name'] ?? null,
                     'amount' => (float)$item['amount_grams'],
-					'wasFinished' => $item['was_finished'],
+                    'wasFinished' => (int)($item['was_finished'] ?? 100),
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
                     'notes' => $item['notes'],
                     'petId' => (int)$item['pet_id']
@@ -396,7 +395,7 @@ elseif ($endpoint === 'feeding') {
         }
     }
     
-    // GET /feeding/history - вся история (для всех питомцев)
+    // GET /feeding/history - вся история
     elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'history' && $param === '') {
         try {
             $startDate = $_GET['startDate'] ?? null;
@@ -405,11 +404,11 @@ elseif ($endpoint === 'feeding') {
             $offset = $_GET['offset'] ?? 0;
             
             $sql = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name,
-					ft.name as type_name, ff.name as flavor_name
+                    ft.name as type_name, ff.name as flavor_name
                     FROM feeding_history fh
                     JOIN foods f ON fh.food_id = f.id
-					JOIN food_types ft ON f.food_type_id = ft.id
-                  LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
+                    JOIN food_types ft ON f.food_type_id = ft.id
+                    LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
                     JOIN manufacturers m ON f.manufacturer_id = m.id
                     JOIN pets p ON fh.pet_id = p.id
                     WHERE 1=1";
@@ -450,10 +449,10 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'],
-					'type' => $item['type_name'],
+                    'type' => $item['type_name'],
                     'flavor' => $item['flavor_name'],
                     'amount' => (float)$item['amount_grams'],
-					'wasFinished' => $item['was_finished'],
+                    'wasFinished' => (int)($item['was_finished'] ?? 100),
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
                     'notes' => $item['notes'],
                     'petId' => (int)$item['pet_id'],
@@ -472,9 +471,12 @@ elseif ($endpoint === 'feeding') {
         try {
             $feedingId = $action;
             
-            $sql = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name 
+            $sql = "SELECT fh.*, f.name as food_name, f.barcode, m.name as manufacturer, p.name as pet_name,
+                    ft.name as type_name, ff.name as flavor_name
                     FROM feeding_history fh
                     JOIN foods f ON fh.food_id = f.id
+                    JOIN food_types ft ON f.food_type_id = ft.id
+                    LEFT JOIN food_flavors ff ON f.flavor_id = ff.id
                     JOIN manufacturers m ON f.manufacturer_id = m.id
                     JOIN pets p ON fh.pet_id = p.id
                     WHERE fh.id = :id";
@@ -491,10 +493,10 @@ elseif ($endpoint === 'feeding') {
                     'foodName' => $item['food_name'],
                     'barcode' => $item['barcode'],
                     'manufacturer' => $item['manufacturer'],
-					'type' => $item['type_name'],
+                    'type' => $item['type_name'],
                     'flavor' => $item['flavor_name'],
                     'amount' => (float)$item['amount_grams'],
-					'wasFinished' => $item['was_finished'],
+                    'wasFinished' => (int)($item['was_finished'] ?? 100),
                     'calories' => $item['calories'] ? (float)$item['calories'] : null,
                     'notes' => $item['notes'],
                     'petId' => (int)$item['pet_id'],
@@ -508,36 +510,35 @@ elseif ($endpoint === 'feeding') {
             Response::sendError('Ошибка при получении кормления: ' . $e->getMessage(), 500);
         }
     }
-	
-	// PUT /feeding/{id}/was-finished - обновить статус съеденного
-elseif ($_SERVER['REQUEST_METHOD'] === 'PUT' && $action === 'was-finished' && is_numeric($param)) {
-    try {
-        $feedingId = $param;
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['wasFinished'])) {
-            Response::sendError('Не указан параметр wasFinished');
+    
+    // PUT /feeding/{id}/was-finished - обновить статус съеденного
+	// Здесь $action - это ID, $param - это "was-finished"
+    elseif ($_SERVER['REQUEST_METHOD'] === 'PUT' && $param  === 'was-finished' && is_numeric($action)) {
+        try {
+            $feedingId = $action;
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['wasFinished'])) {
+                Response::sendError('Не указан параметр wasFinished');
+            }
+            
+            $wasFinished = (int)$data['wasFinished'];
+            
+            if ($wasFinished < 0 || $wasFinished > 100) {
+                Response::sendError('Параметр wasFinished должен быть от 0 до 100');
+            }
+            
+            $success = $feeding->updateWasFinished($feedingId, $wasFinished);
+            
+            if ($success) {
+                Response::sendSuccess(null, 'Статус обновлен');
+            } else {
+                Response::sendError('Ошибка при обновлении статуса');
+            }
+        } catch (Exception $e) {
+            Response::sendError('Ошибка: ' . $e->getMessage(), 500);
         }
-        
-        $wasFinished = (int)$data['wasFinished'];
-        
-        // Валидация (0-100)
-        if ($wasFinished < 0 || $wasFinished > 100) {
-            Response::sendError('Параметр wasFinished должен быть от 0 до 100');
-        }
-        
-        $feeding = new Feeding($db);
-        $success = $feeding->updateWasFinished($feedingId, $wasFinished);
-        
-        if ($success) {
-            Response::sendSuccess(null, 'Статус обновлен');
-        } else {
-            Response::sendError('Ошибка при обновлении статуса');
-        }
-    } catch (Exception $e) {
-        Response::sendError('Ошибка: ' . $e->getMessage(), 500);
     }
-}
     
     else {
         Response::sendError('Метод не найден', 404);
@@ -556,35 +557,31 @@ elseif ($endpoint === 'manufacturers') {
         } catch (Exception $e) {
             Response::sendError('Ошибка при получении производителей: ' . $e->getMessage(), 500);
         }
-    } 
-// ===== ДОБАВЛЕНИЕ ПРОИЗВОДИТЕЛЯ =====
-	elseif ($endpoint === 'manufacturers' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['name'])) {
-            Response::sendError('Не указано название производителя');
-        }
-        
-        //$sql = "INSERT INTO manufacturers (name, country, created_at, updated_at) VALUES (:name, :country, NOW(), NOW())";
-		$sql = "INSERT INTO manufacturers (name, country, created_at) VALUES (:name, :country, NOW())";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([
-            ':name' => $data['name'],
-            ':country' => $data['country'] ?? null
-        ]);
-        
-        $id = $db->lastInsertId();
-        Response::sendSuccess(['id' => $id], 'Производитель добавлен');
-    } catch (Exception $e) {
-        Response::sendError('Ошибка: ' . $e->getMessage(), 500);
     }
-	}
-	
-	else {
+    elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['name'])) {
+                Response::sendError('Не указано название производителя');
+            }
+            
+            $sql = "INSERT INTO manufacturers (name, country, created_at) VALUES (:name, :country, NOW())";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([
+                ':name' => $data['name'],
+                ':country' => $data['country'] ?? null
+            ]);
+            
+            $id = $db->lastInsertId();
+            Response::sendSuccess(['id' => $id], 'Производитель добавлен');
+        } catch (Exception $e) {
+            Response::sendError('Ошибка: ' . $e->getMessage(), 500);
+        }
+    }
+    else {
         Response::sendError('Метод не поддерживается', 405);
     }
-	
 }
 
 // ===== ТИПЫ КОРМОВ (FOOD TYPES) =====
@@ -616,28 +613,26 @@ elseif ($endpoint === 'flavors') {
         } catch (Exception $e) {
             Response::sendError('Ошибка при получении вкусов: ' . $e->getMessage(), 500);
         }
-    } 
-// ===== ДОБАВЛЕНИЕ ВКУСА =====
-	elseif ($endpoint === 'flavors' && $_SERVER['REQUEST_METHOD'] === 'POST') {
-    try {
-        $data = json_decode(file_get_contents('php://input'), true);
-        
-        if (!isset($data['name'])) {
-            Response::sendError('Не указано название вкуса');
-        }
-        
-        $sql = "INSERT INTO food_flavors (name, created_at) VALUES (:name, NOW())";
-        $stmt = $db->prepare($sql);
-        $stmt->execute([':name' => $data['name']]);
-        
-        $id = $db->lastInsertId();
-        Response::sendSuccess(['id' => $id], 'Вкус добавлен');
-    } catch (Exception $e) {
-        Response::sendError('Ошибка: ' . $e->getMessage(), 500);
     }
-}
-	
-	else {
+    elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        try {
+            $data = json_decode(file_get_contents('php://input'), true);
+            
+            if (!isset($data['name'])) {
+                Response::sendError('Не указано название вкуса');
+            }
+            
+            $sql = "INSERT INTO food_flavors (name, created_at) VALUES (:name, NOW())";
+            $stmt = $db->prepare($sql);
+            $stmt->execute([':name' => $data['name']]);
+            
+            $id = $db->lastInsertId();
+            Response::sendSuccess(['id' => $id], 'Вкус добавлен');
+        } catch (Exception $e) {
+            Response::sendError('Ошибка: ' . $e->getMessage(), 500);
+        }
+    }
+    else {
         Response::sendError('Метод не поддерживается', 405);
     }
 }
@@ -664,7 +659,6 @@ elseif ($endpoint === 'stats') {
     
     if ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === 'summary') {
         try {
-            // Общая статистика по всем питомцам
             $sql = "SELECT 
                     (SELECT COUNT(*) FROM pets WHERE is_active = TRUE) as total_pets,
                     (SELECT COUNT(*) FROM feeding_history WHERE feeding_date = CURDATE()) as today_feedings,
@@ -687,12 +681,6 @@ elseif ($endpoint === 'stats') {
         Response::sendError('Метод не найден', 404);
     }
 }
-
-
-
-
-
-
 
 // ===== 404 - ENDPOINT НЕ НАЙДЕН =====
 else {
