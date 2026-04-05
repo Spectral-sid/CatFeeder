@@ -2,11 +2,13 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="?attr/customBackground"
     android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/customBackground"
         android:orientation="vertical">
 
         <!-- Статус сервера -->
@@ -34,6 +36,7 @@
         <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="?attr/customBackground"
             android:scrollbars="none">
 
             <LinearLayout
@@ -50,7 +53,7 @@
             android:layout_height="wrap_content"
             android:text="Выбрано: 0 питомцев"
             android:textSize="14sp"
-            android:textColor="#FF666666"
+            android:textColor="?attr/customTextSecondary"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp" />
 
@@ -86,7 +89,7 @@
             android:layout_height="wrap_content"
             android:text="Доля от веса пакета:"
             android:textSize="14sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/customTextSecondary"
             android:layout_marginTop="8dp"
             android:layout_marginBottom="8dp"/>
 
@@ -173,7 +176,7 @@
                 android:layout_height="wrap_content"
                 android:text="Вес порции: "
                 android:textSize="16sp"
-                android:textColor="@color/text_primary"/>
+                android:textColor="?attr/customTextPrimary" />
 
             <TextView
                 android:id="@+id/tvCalculatedWeight"
@@ -191,7 +194,7 @@
                 android:layout_height="wrap_content"
                 android:text=""
                 android:textSize="14sp"
-                android:textColor="@color/text_secondary"
+                android:textColor="?attr/customTextSecondary"
                 android:layout_marginStart="16dp"/>
 
         </LinearLayout>
@@ -219,6 +222,7 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:gravity="center_vertical"
+            android:background="?attr/customBackground"
             android:orientation="horizontal">
 
             <TextView
@@ -258,7 +262,7 @@
             android:gravity="center"
             android:text="Нет данных для отображения"
             android:textSize="16sp"
-            android:textColor="@color/text_secondary"
+            android:textColor="?attr/customTextSecondary"
             android:visibility="gone"/>
         <Button
             android:id="@+id/btn_AddFood"

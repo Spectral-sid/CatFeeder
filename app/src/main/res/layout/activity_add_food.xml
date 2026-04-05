@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@color/white"
+    android:background="?attr/customBackground"
+
     android:fillViewport="true"
     android:scrollbars="vertical">
 
@@ -29,7 +30,7 @@
             android:hint="Штрихкод"
             android:inputType="number"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
+
             android:layout_marginBottom="2dp" />
 
         <Button
@@ -37,6 +38,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Сканировать штрихкод"
+            style="@style/Widget.CatFeeder.Button.Small"
             android:layout_marginBottom="16dp" />
 
         <EditText
@@ -45,7 +47,7 @@
             android:layout_height="wrap_content"
             android:hint="Название корма"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
+            android:textColor="?attr/customTextSecondary"
             android:layout_marginBottom="4dp" />
 
         <!-- Производитель с кнопкой добавления -->
@@ -67,14 +69,15 @@
                     android:layout_height="wrap_content"
                     android:text="Производитель"
                     android:textStyle="bold"
-
+                    android:textColor="?attr/customTextPrimary"
                     android:layout_marginBottom="4dp" />
 
                 <Spinner
                     android:id="@+id/spinnerManufacturer"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:background="@android:drawable/edit_text" />
+                    android:textColor="?attr/colorPrimary"
+                     />
             </LinearLayout>
 
             <ImageButton
@@ -164,7 +167,7 @@
             android:hint="Вес упаковки (г)"
             android:inputType="numberDecimal"
             android:padding="12dp"
-            android:background="@android:drawable/edit_text"
+            android:background="?attr/customBackground"
             android:layout_marginBottom="8dp" />
 
         <EditText
@@ -174,7 +177,7 @@
             android:hint="Калории (ккал/100г)"
             android:inputType="numberDecimal"
             android:padding="3dp"
-            android:background="@android:drawable/edit_text"
+            android:background="?attr/customBackground"
             android:layout_marginBottom="2dp" />
 
         <EditText

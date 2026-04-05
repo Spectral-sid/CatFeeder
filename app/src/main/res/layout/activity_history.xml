@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/background"
+    android:background="?attr/customBackground"
     tools:context=".HistoryActivity">
 
     <!-- Toolbar вместо TabLayout сверху -->
@@ -24,11 +24,11 @@
         android:id="@+id/tab_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/white"
-        app:tabIndicatorColor="@color/primary_color"
+        android:background="?attr/customBackground"
+        app:tabIndicatorColor="?attr/colorPrimary"
         app:tabIndicatorHeight="3dp"
-        app:tabSelectedTextColor="@color/primary_color"
-        app:tabTextColor="@color/text_secondary"
+        app:tabSelectedTextColor="?attr/colorPrimary"
+        app:tabTextColor="?attr/customTextSecondary"
         app:tabMode="fixed"
         app:tabGravity="fill"/>
 
@@ -36,6 +36,7 @@
     <androidx.cardview.widget.CardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="?attr/customCardBackground"
         android:layout_margin="8dp"
         app:cardCornerRadius="8dp"
         app:cardElevation="2dp">
@@ -51,7 +52,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Питомец:"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/customTextPrimary"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"/>
 
@@ -68,7 +69,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Период:"
-                android:textColor="@color/text_primary"
+                android:textColor="?attr/customTextPrimary"
                 android:textSize="14sp"
                 android:layout_marginBottom="8dp"/>
 
@@ -84,7 +85,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="Выберите период"
-                    android:textColor="@color/text_secondary"
+                    android:textColor="?attr/customTextSecondary"
                     android:textSize="16sp"
                     android:layout_marginEnd="8dp"/>
 
@@ -139,7 +140,7 @@
         android:gravity="center"
         android:text="Выберите питомца для просмотра истории"
         android:textSize="16sp"
-        android:textColor="@color/text_secondary"
+        android:textColor="?attr/customTextSecondary"
         android:visibility="gone"/>
 
     <!-- RecyclerView -->

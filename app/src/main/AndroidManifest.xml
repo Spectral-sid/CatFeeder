@@ -122,7 +122,7 @@
             android:name=".AddFoodActivity"
             android:exported="false"
             android:label="Добавление корма"
-            android:theme="@style/Theme.CatFeeder.Light"
+            android:theme="@style/Theme.CatFeeder.Dark"
             android:windowSoftInputMode="stateVisible|adjustResize"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:parentActivityName=".MainActivity">

@@ -10,7 +10,7 @@
         android:layout_height="wrap_content"
         android:text="Название"
         android:textSize="14sp"
-        android:textColor="#FF666666"
+        android:textColor="?attr/customTextSecondary"
         android:layout_marginBottom="4dp" />
 
     <EditText
@@ -20,8 +20,11 @@
         android:hint="Введите название"
         android:padding="12dp"
         android:background="@android:drawable/edit_text"
-        android:textColor="#FF000000"
-        android:textColorHint="#FF888888"
+        android:textColor="?attr/customTextPrimary"
+
+
+
+        android:textColorHint="?attr/customTextHint"
         android:layout_marginBottom="16dp" />
 
     <TextView
@@ -30,7 +33,7 @@
         android:layout_height="wrap_content"
         android:text="Дополнительно"
         android:textSize="14sp"
-        android:textColor="#FF666666"
+        android:textColor="?attr/customTextSecondary"
         android:layout_marginBottom="4dp"
         android:visibility="gone" />
 
@@ -41,8 +44,8 @@
         android:hint="Введите значение"
         android:padding="12dp"
         android:background="@android:drawable/edit_text"
-        android:textColor="#FF000000"
-        android:textColorHint="#FF888888"
+        android:textColor="?attr/customTextPrimary"
+        android:textColorHint="?attr/customTextHint"
         android:visibility="gone"
         android:layout_marginBottom="8dp" />
 

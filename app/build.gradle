@@ -52,11 +52,11 @@ android {
 
             def runTasks = gradle.startParameter.taskNames
            // if ('assembleRelease' in runTasks || 'assemble' in runTasks) {
-           // if ('assembleRelease' in runTasks || 'assemble' in runTasks || 'bundleRelease' in runTasks) {
+           // if ('assembleDebug' in runTasks || 'assembleRelease' in runTasks || 'assemble' in runTasks || 'bundleRelease' in runTasks) {
                 versionCodeValue++
                 versionProps['VERSION_CODE'] = versionCodeValue.toString()
                 versionProps.store(versionPropsFile.newWriter(), null)
-           // }
+          //  }
         } else {
             // Создаем файл, если его нет
             def defaultProps = new Properties()

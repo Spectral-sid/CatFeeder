@@ -546,7 +546,7 @@ class MainActivity : AppCompatActivity() {
         // Настройка цветов кнопок (опционально)
         dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(getColor(R.color.success_green))
         dialog.getButton(AlertDialog.BUTTON_NEUTRAL).setTextColor(getColor(R.color.info_blue))
-        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getColor(R.color.text_secondary))
+        dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(getColor(R.color.error_red))
     }
 
     private fun openAddFoodActivity(barcode: String) {

@@ -30,7 +30,7 @@
         android:layout_height="wrap_content"
         android:text="4.5 кг"
         android:textSize="12sp"
-        android:textColor="#666666"
+        android:textColor="?attr/customTextSecondary"
         android:gravity="center"/>
 
 </LinearLayout>
