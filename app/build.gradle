@@ -4,6 +4,7 @@ plugins {
 }
 
 //def versionPropsFile = file("version.properties")
+/*
 def getVersionCode() {
     // Если файл не найден, создаем его с начальным значением
     if (!versionPropsFile.canRead()) {
@@ -33,6 +34,7 @@ def getVersionCode() {
     return code
 }
 
+*/
 
 android {
     namespace = "com.sid.catfeeder"
@@ -49,11 +51,12 @@ android {
             versionCodeValue = versionProps['VERSION_CODE'].toInteger()
 
             def runTasks = gradle.startParameter.taskNames
-            if ('assembleRelease' in runTasks || 'assemble' in runTasks) {
+           // if ('assembleRelease' in runTasks || 'assemble' in runTasks) {
+           // if ('assembleRelease' in runTasks || 'assemble' in runTasks || 'bundleRelease' in runTasks) {
                 versionCodeValue++
                 versionProps['VERSION_CODE'] = versionCodeValue.toString()
                 versionProps.store(versionPropsFile.newWriter(), null)
-            }
+           // }
         } else {
             // Создаем файл, если его нет
             def defaultProps = new Properties()

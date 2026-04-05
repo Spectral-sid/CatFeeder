@@ -50,14 +50,14 @@ class FeedingAdapter(
         holder.tvPetName.visibility = View.VISIBLE
 
         // НОВЫЙ КОД: Отображаем статус съеденного
-        val wasFinished = feeding.wasFinished ?: 100
+        val wasFinished = feeding.wasFinished ?: 0
         val statusText = when {
             wasFinished >= 100 -> "✓ Всё съедено"
             wasFinished >= 75 -> "⚡ Большая часть"
-            wasFinished >= 50 -> "◔ Половина"
-            wasFinished >= 25 -> "◷ Треть"
-            wasFinished > 0 -> "◐ Почти ничего"
-            else -> "✗ Не тронуто"
+            wasFinished >= 50 -> "◐ Половина"
+            wasFinished >= 25 -> "◔ Треть"
+            wasFinished > 0 -> "◷ Почти ничего"
+            else -> "❓ Не указано"
         }
         holder.tvWasFinished.text = statusText
         holder.tvWasFinished.visibility = View.VISIBLE

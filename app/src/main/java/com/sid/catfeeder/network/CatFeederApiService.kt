@@ -35,6 +35,9 @@ interface CatFeederApiService {
     suspend fun createFood(@Body food: FoodCreate): Response<ApiResponse<IdResponse>>
     //suspend fun createFood(@Body food: FoodCreate): ApiResponse<Map<String, Int>>
 
+    @PUT("foods/{id}")
+    suspend fun updateFood(@Path("id") id: Int,@Body food: FoodUpdate): Response<ApiResponse<Unit>>
+
     @GET("foods")
     suspend fun getAllFoods(): Response<ApiResponse<List<Food>>>
 
@@ -149,6 +152,17 @@ data class FoodCreate(
     val calories: Double? = null
 )
 
+// data class обновления корма
+data class FoodUpdate(
+    val name: String,
+    val manufacturerId: Int,
+    val foodTypeId: Int,
+    val flavorId: Int? = null,
+    val weight: Double? = null,
+    val calories: Double? = null,
+    val protein: Double? = null,
+    val fat: Double? = null
+)
 data class FeedingLog(
     val petId: Int,
     val amount: Double,
@@ -158,7 +172,7 @@ data class FeedingLog(
     val feedingDate: String? = null,
     val feedingTime: String? = null,
     val calories: Double? = null,
-    val wasFinished: Int? = 100,
+    val wasFinished: Int? = 0,
     val notes: String? = null
 )
 

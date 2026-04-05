@@ -671,6 +671,7 @@ class MainActivity : AppCompatActivity() {
                                 amount = amountPerPet,
                                 barcode = barcode,
                                 foodName = foodName,
+                                wasFinished = 0,
                                 notes = "Общее количество: ${totalAmount}г, разделено на ${petIds.size} питомцев"
                             )
 
@@ -686,6 +687,7 @@ class MainActivity : AppCompatActivity() {
                                         foodName = foodName,
                                         barcode = barcode,
                                         amount = amountPerPet,
+                                        wasFinished = 0,
                                         petId = petId,
                                         petName = pet?.name ?: "Питомец"
                                     )

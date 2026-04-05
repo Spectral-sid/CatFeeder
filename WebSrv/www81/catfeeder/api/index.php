@@ -279,6 +279,47 @@ elseif ($endpoint === 'foods') {
             Response::sendError('Ошибка при добавлении корма: ' . $e->getMessage(), 500);
         }
     }
+	
+	// PUT /foods/{id} - обновление корма
+elseif ($_SERVER['REQUEST_METHOD'] === 'PUT' && is_numeric($action)) {
+    try {
+        $foodId = (int)$action;
+        $data = json_decode(file_get_contents('php://input'), true);
+        
+        if (!isset($data['name'])) {
+            Response::sendError('Не указано название корма');
+        }
+        
+        $sql = "UPDATE foods SET 
+                name = :name,
+                manufacturer_id = :manufacturer_id,
+                food_type_id = :food_type_id,
+                flavor_id = :flavor_id,
+                weight_grams = :weight_grams,
+                calories = :calories,
+                protein_percent = :protein_percent,
+                fat_percent = :fat_percent,
+                updated_at = NOW()
+                WHERE id = :id";
+        
+        $stmt = $db->prepare($sql);
+        $stmt->execute([
+            ':id' => $foodId,
+            ':name' => $data['name'],
+            ':manufacturer_id' => $data['manufacturerId'],
+            ':food_type_id' => $data['foodTypeId'],
+            ':flavor_id' => $data['flavorId'] ?? null,
+            ':weight_grams' => $data['weight'] ?? null,
+            ':calories' => $data['calories'] ?? null,
+            ':protein_percent' => $data['protein'] ?? null,
+            ':fat_percent' => $data['fat'] ?? null
+        ]);
+        
+        Response::sendSuccess(null, 'Корм успешно обновлен');
+    } catch (Exception $e) {
+        Response::sendError('Ошибка: ' . $e->getMessage(), 500);
+    }
+}
     
     // GET /foods - список всех кормов
     elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && $action === '') {
